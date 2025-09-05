@@ -175,6 +175,7 @@ done
 
 echo
 warn "docker 그룹 적용을 위해 '${INSTALL_USER}' 사용자로 재로그인(또는 재부팅)하세요."
+msg  "도커 sudo 재로그인 없이 적용하는 명령어 >> newgrp docker  "
 msg  "Multipass 사용 전 BIOS/UEFI에서 VT-x/AMD-V 활성화 필요."
 msg  "완료!"
 
