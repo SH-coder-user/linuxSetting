@@ -48,12 +48,8 @@ ensure_user_in_group() {
 
 # Ubuntu codename 추출 (Mint 호환)
 get_ubuntu_codename() {
-  # 1) /etc/os-release 의 UBUNTU_CODENAME 우선
-  # 2) /etc/upstream-release/lsb-release (Mint에서 종종 존재)
-  # 3) VERSION_CODENAME 또는 fallback 경고
   local code=""
   if [ -r /etc/os-release ]; then
-    # shellcheck disable=SC1091
     . /etc/os-release
     code="${UBUNTU_CODENAME:-}"
     if [ -z "$code" ]; then
@@ -61,7 +57,6 @@ get_ubuntu_codename() {
     fi
   fi
   if [ -z "$code" ] && [ -r /etc/upstream-release/lsb-release ]; then
-    # shellcheck disable=SC1091
     . /etc/upstream-release/lsb-release
     code="${DISTRIB_CODENAME:-$code}"
   fi
@@ -85,6 +80,15 @@ apt_install \
   net-tools iproute2 traceroute nmap \
   ufw \
   python3 python3-pip python3-venv
+
+# 1-1) SSH 서버 설치 및 활성화
+if ! need_cmd sshd; then
+  msg "OpenSSH 서버 설치"
+  apt_install openssh-server
+  systemctl enable --now ssh
+else
+  msg "OpenSSH 서버 이미 설치됨"
+fi
 
 # 2) Docker (공식 리포지토리 + Compose v2 플러그인)
 if ! need_cmd docker; then
@@ -144,14 +148,12 @@ else
   msg "multipass 이미 설치됨"
 fi
 
-# 5) UFW 기본 정책 (데스크톱이면 필요 시 비활성화해도 무방)
+# 5) UFW 기본 정책
 if ufw status | grep -qi inactive; then
   msg "UFW 기본 정책(deny incoming / allow outgoing / OpenSSH 허용)"
   ufw default deny incoming >>"$LOG" 2>&1 || true
   ufw default allow outgoing >>"$LOG" 2>&1 || true
-  if systemctl list-unit-files | grep -qE '^ssh\.service'; then
-    ufw allow OpenSSH >>"$LOG" 2>&1 || ufw allow 22/tcp >>"$LOG" 2>&1 || true
-  fi
+  ufw allow OpenSSH >>"$LOG" 2>&1 || ufw allow 22/tcp >>"$LOG" 2>&1 || true
   echo "y" | ufw enable >>"$LOG" 2>&1 || true
 else
   msg "UFW 이미 활성화됨"
@@ -160,7 +162,7 @@ fi
 # 6) 버전 출력
 echo
 msg "설치 버전 확인:"
-for c in git curl wget vim htop ifconfig ip route traceroute nmap python3 pip3 docker kubectl multipass; do
+for c in git curl wget vim htop ifconfig ip route traceroute nmap python3 pip3 docker kubectl multipass sshd; do
   if need_cmd "$c"; then
     printf "  - %-10s : " "$c"
     case "$c" in
@@ -168,6 +170,7 @@ for c in git curl wget vim htop ifconfig ip route traceroute nmap python3 pip3 d
       docker) docker --version || true ;;
       kubectl) kubectl version --client --output=yaml | head -n 5 || true ;;
       multipass) multipass version || true ;;
+      sshd) ssh -V 2>&1 || true ;;
       *) "$c" --version 2>&1 | head -n1 || true ;;
     esac
   fi
@@ -175,7 +178,7 @@ done
 
 echo
 warn "docker 그룹 적용을 위해 '${INSTALL_USER}' 사용자로 재로그인(또는 재부팅)하세요."
-msg  "도커 sudo 재로그인 없이 적용하는 명령어 >> newgrp docker  "
+msg  "도커 sudo 재로그인 없이 적용하려면 >> newgrp docker"
 msg  "Multipass 사용 전 BIOS/UEFI에서 VT-x/AMD-V 활성화 필요."
+msg  "SSH 서버는 기본 포트(22)로 활성화되어 있습니다."
 msg  "완료!"
-
