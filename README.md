@@ -17,6 +17,13 @@ Linux Mint 재설치 후 바로 사용할 수 있는 **개인 개발 환경 세�
 
 ---
 
+# Linux Mint Setup & k3s Playground
+
+Linux Mint 재설치 후 바로 사용할 수 있는 **개인 개발 환경 세팅 스크립트**와  
+**Multipass 기반 3노드 k3s 클러스터 구성 스크립트**입니다.
+
+---
+
 ## 📦 포함된 파일
 
 - `setup_mint.sh`  
@@ -27,7 +34,8 @@ Linux Mint 재설치 후 바로 사용할 수 있는 **개인 개발 환경 세�
     - **보안/시스템**: ufw, ca-certificates, gnupg, lsb-release, apt-transport-https, software-properties-common
     - **개발 환경**: python3, python3-pip, python3-venv
     - **컨테이너/쿠버네티스**: docker, docker-compose-plugin, kubectl
-    - **VM 관리**: multipass (snap 기반 설치)
+    - **VM 관리**: multipass (snap 기반 설치 가능)
+    - **SSH 서버**: openssh-server (자동 설치 및 활성화)
 
 - `multipass-k3s-3node.sh`  
   - Multipass VM 3개(k3s1, k3s2, k3s3)를 띄우고  
@@ -48,6 +56,49 @@ Linux Mint 재설치 후 바로 사용할 수 있는 **개인 개발 환경 세�
 ## 🚀 사용 방법
 
 ### 1. 초기 세팅
-```bash
-chmod +x setup_mint.sh
-sudo ./setup_mint.sh
+  - chmod +x setup_mint.sh
+  - sudo ./setup_mint.sh
+
+### 2. Multipass + k3s 클러스터 구성
+  - chmod +x multipass-k3s-3node.sh
+  - ./multipass-k3s-3node.sh up
+
+
+## 클러스터 연결:
+
+  - export KUBECONFIG=$PWD/kubeconfig_k3s1.yaml
+  - kubectl get nodes -o wide
+
+
+## VM 관리:
+
+  - ./multipass-k3s-3node.sh stop    # VM 중지
+  - ./multipass-k3s-3node.sh start   # VM 시작
+  - ./multipass-k3s-3node.sh delete  # VM 삭제
+
+### 3. Vim 설정 적용
+  - cp .vimrc ~/
+
+### 🛠️ 추가 팁
+
+## snapd 활성화 (Mint 기본 차단 해제)
+
+  - sudo rm /etc/apt/preferences.d/nosnap.pref
+  - sudo apt update
+  - sudo apt install snapd -y
+  - sudo snap install multipass --classic
+
+
+SSH 포트 변경 (예: 2222)
+
+/etc/ssh/sshd_config 편집 → Port 2222 설정
+
+UFW 규칙 추가:
+
+sudo ufw allow 2222/tcp
+sudo systemctl restart ssh
+
+
+k3s 서버에 Traefik 끄기 → multipass-k3s-3node.sh 안의 INSTALL_K3S_EXEC 옵션에 --disable traefik 추가
+
+nomodeset 옵션: 특정 그래픽/하드웨어 문제로 부팅 실패 시 GRUB에서 nomodeset 옵션 추가 후 부팅 시도
