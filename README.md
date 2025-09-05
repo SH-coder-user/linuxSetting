@@ -101,3 +101,33 @@ Linux Mint 재설치 후 바로 사용할 수 있는 **개인 개발 환경 세�
 
 #### k3s 서버에 Traefik 끄기 → multipass-k3s-3node.sh 안의 INSTALL_K3S_EXEC 옵션에 --disable traefik 추가
 #### nomodeset 옵션: 특정 그래픽/하드웨어 문제로 부팅 실패 시 GRUB에서 nomodeset 옵션 추가 후 부팅 시도
+
+### 한글입력기 설치 방법(fcitx5)
+#### 로케일/인코딩을 UTF-8로 통일(선행)
+##### 권장: 영문 UI + 한글 입력 안정
+> sudo locale-gen en_US.UTF-8 ko_KR.UTF-8
+> sudo update-locale LANG=en_US.UTF-8 LC_CTYPE=ko_KR.UTF-8
+
+##### 한국어 UI까지 원하면:
+##### sudo update-locale LANG=ko_KR.UTF-8
+##### 적용 확인(재로그인 후):
+> locale
+
+### 확인 완료 후 fcitx 설치 진행
+> sudo apt install fcitx5 fcitx5-hangul fcitx5-configtool fcitx5-frontend-gtk3 fcitx5-frontend-qt5
+> im-config -n fcitx5
+> vi ~/.xprofile
+> export GTK_IM_MODULE=fcitx
+> export QT_IM_MODULE=fcitx
+> export XMODIFIERS="@im=fcitx"
+> 저장후 로그아웃/재로그임
+
+#### 자동실행 등록
+> mkdir -p ~/.config/autostart
+> cp /usr/share/applications/org.fcitx.Fcitx5.desktop ~/.config/autostart/
+
+#### 한글입력 모듈 확인
+> fcitx5-configtool
+> 입력방법 목록에 '한글' 또는 Hangul이 있어야함. 기존입력타입X
+> 위의 한글과 영문키 전환하게끔 집어넣기
+
