@@ -1,0 +1,53 @@
+root에는 필수 세팅만 하고 나머지 실험적인것들이나
+필요할때만 잠깐 쓰는 것들은 도커같은 가상화 공간 사용해서 세팅하고 이미지로
+저장해서 사용하기
+
+포맷 자주안하려면 이렇게 해놔야 편함
+
+
+1. 설치 순서
+
+민트 초기 세팅 (root 권한 필요)
+
+setup_mint.sh 실행 → apt, Docker, kubectl, Multipass, 기본 툴까지 한 번에 설치
+
+실행 예시:
+
+chmod +x setup_mint.sh
+sudo ./setup_mint.sh
+
+
+실행 후 재부팅 또는 로그아웃/로그인 → docker 그룹 적용
+
+Multipass + k3s 클러스터 구성 (사용자 계정에서 실행)
+
+multipass-k3s-3node.sh 실행 → VM 3개 띄우고 k3s 클러스터 자동 구성
+
+실행 예시:
+
+chmod +x multipass-k3s-3node.sh
+./multipass-k3s-3node.sh up
+
+
+완료 후 현재 디렉토리에 kubeconfig_k3s1.yaml 생성됨 → kubectl 바로 사용 가능
+
+export KUBECONFIG=$PWD/kubeconfig_k3s1.yaml
+kubectl get nodes -o wide
+
+2. root 설치 vs 사용자 설치
+
+setup_mint.sh: 시스템 레벨(root)에서 설치되는 패키지 → 운영체제 전역에서 사용
+
+예: Docker Engine, kubectl, Multipass, git, curl 등
+
+multipass-k3s-3node.sh: root 권한 불필요 → 사용자의 Multipass CLI로 VM 띄우고 내부에서 자동으로 k3s 설치
+
+즉, 1번은 시스템 준비(root), 2번은 프로젝트용 클러스터 구축(사용자) 으로 보시면 됩니다.
+
+3. 실행 후 체크
+
+docker --version, kubectl version --client, multipass version 확인
+
+multipass list로 VM 상태 확인
+
+kubectl get nodes로 k3s 노드 3개(k3s1, k3s2, k3s3)가 Ready 상태인지 확인

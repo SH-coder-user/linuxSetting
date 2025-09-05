@@ -1,0 +1,17 @@
+# 1) 스크립트 저장
+nano multipass-k3s-3node.sh  # 아래 내용 전체 붙여넣기
+chmod +x multipass-k3s-3node.sh
+
+# 2) 실행 (Mint/Ubuntu 호스트에서)
+./multipass-k3s-3node.sh up
+#  (최초 설치/부팅 및 k3s 셋업까지 자동)
+
+# 3) kubectl 연결 (현재 쉘에서만)
+export KUBECONFIG="$PWD/kubeconfig_k3s1.yaml"
+kubectl get nodes -o wide
+
+# 4) 중지/삭제
+./multipass-k3s-3node.sh stop    # 3노드 중지
+./multipass-k3s-3node.sh start   # 3노드 시작
+./multipass-k3s-3node.sh delete  # 3노드 삭제
+
